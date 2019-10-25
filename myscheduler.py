@@ -1,17 +1,11 @@
 #!/usr/bin/python3
 
-import sys, re, argparse
-import fcntl
-import os
+import sys
 import re
 import locale
 import time
 import datetime
-import ephem
-import pigpio
-import socket
-import signal, atexit, subprocess, traceback
-import logging, logging.handlers
+import traceback
 import threading
 
 try:
@@ -270,12 +264,20 @@ class Scheduler(threading.Thread, MyLog):
         self.lastScheduleUpdateTime = 0
         self.currentSchedule = {}
 
-        self.homeLocation = ephem.Observer()
+        self.homeLocation = None
         locale.setlocale(locale.LC_TIME,'')
         return
 
     def updateSchedule(self):
+        try:
+            import ephem
+        except ImportError:
+            self.LogWarn('Unable to update schedule. Module "ephem" not found.')
+            return
+
         weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+        self.homeLocation = ephem.Observer()
         
         self.homeLocation.lat = str(self.config.Latitude)
         self.homeLocation.lon = str(self.config.Longitude)
